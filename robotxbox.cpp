@@ -1,5 +1,5 @@
 
-#include <frc/Joystick.h>
+#include <frc/XboxController.h>
 #include <frc/TimedRobot.h>
 #include <frc/drive/MecanumDrive.h>
 #include <frc/motorcontrol/PWMSparkMax.h>
@@ -30,16 +30,14 @@ class Robot : public frc::TimedRobot {
   static constexpr int kFrontRightChannel = 2;
   static constexpr int kRearRightChannel = 3;
 
-  static constexpr int kJoystickChannel = 0;
+  static constexpr int kControllerChannel = 0;
 
   frc::PWMSparkMax m_frontLeft{kFrontLeftChannel};
   frc::PWMSparkMax m_rearLeft{kRearLeftChannel};
   frc::PWMSparkMax m_frontRight{kFrontRightChannel};
   frc::PWMSparkMax m_rearRight{kRearRightChannel};
-  frc::MecanumDrive m_robotDrive{m_frontLeft, m_rearLeft, m_frontRight,
-                                 m_rearRight};
 
-  frc::Joystick m_stick{kJoystickChannel};
+  frc::XboxController cntrl{kControllerChannel};
 };
 
 #ifndef RUNNING_FRC_TESTS
