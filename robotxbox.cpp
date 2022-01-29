@@ -17,7 +17,7 @@ class Robot : public frc::TimedRobot {
   }
 
   void TeleopPeriodic() override {
-
+    m_robotDrive.DriveCartesian(-cntrl.GetLeftY(), cntrl.GetLeftX(), (cntrl.GetRightTriggerAxis()-cntrl.GetLeftTriggerAxis()));
   }
 
  private:
@@ -32,6 +32,7 @@ class Robot : public frc::TimedRobot {
   frc::PWMSparkMax rearLeft{kRearLeftChannel};
   frc::PWMSparkMax frontRight{kFrontRightChannel};
   frc::PWMSparkMax rearRight{kRearRightChannel};
+  frc::MecanumDrive m_robotDrive{m_frontLeft, m_rearLeft, m_frontRight, m_rearRight};
 
   frc::XboxController cntrl{kControllerChannel};
 };
