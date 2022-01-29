@@ -1,7 +1,6 @@
 
 #include <frc/XboxController.h>
 #include <frc/TimedRobot.h>
-#include <frc/drive/MecanumDrive.h>
 #include <frc/motorcontrol/PWMSparkMax.h>
 
 /**
@@ -18,10 +17,7 @@ class Robot : public frc::TimedRobot {
   }
 
   void TeleopPeriodic() override {
-    /* Use the joystick X axis for lateral movement, Y axis for forward
-     * movement, and Z axis for rotation.
-     */
-    m_robotDrive.DriveCartesian(m_stick.GetX(), m_stick.GetY(), m_stick.GetZ());
+
   }
 
  private:
@@ -32,10 +28,10 @@ class Robot : public frc::TimedRobot {
 
   static constexpr int kControllerChannel = 0;
 
-  frc::PWMSparkMax m_frontLeft{kFrontLeftChannel};
-  frc::PWMSparkMax m_rearLeft{kRearLeftChannel};
-  frc::PWMSparkMax m_frontRight{kFrontRightChannel};
-  frc::PWMSparkMax m_rearRight{kRearRightChannel};
+  frc::PWMSparkMax frontLeft{kFrontLeftChannel};
+  frc::PWMSparkMax rearLeft{kRearLeftChannel};
+  frc::PWMSparkMax frontRight{kFrontRightChannel};
+  frc::PWMSparkMax rearRight{kRearRightChannel};
 
   frc::XboxController cntrl{kControllerChannel};
 };
