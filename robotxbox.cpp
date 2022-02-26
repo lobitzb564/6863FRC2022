@@ -24,7 +24,7 @@ class Robot : public frc::TimedRobot {
     if (timekeep.Get() > 2_s && timekeep.Get() < 3_s) {
       m_robotDrive.DriveCartesian(0.25, 0, 0);
     } else {
-      
+      m_robotDrive.DriveCartesian(0, 0, 0);
     }
   }
   void TeleopPeriodic() override {
