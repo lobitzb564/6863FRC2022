@@ -15,7 +15,18 @@ class Robot : public frc::TimedRobot {
     m_frontRight.SetInverted(true);
     m_rearRight.SetInverted(true);
   }
-
+ 
+  void AutonomousInit() override {
+    timekeep.Reset();
+    timekeep.Start();
+  }
+  void AutonomousPeriodic() override {
+    if (timekeep.Get() > 2_s && timekeep.Get() < 3_s) {
+      m_robotDrive.DriveCartesian(0.25, 0, 0);
+    } else {
+      
+    }
+  }
   void TeleopPeriodic() override {
     m_robotDrive.DriveCartesian(-cntrl.GetLeftY(), cntrl.GetLeftX(), (cntrl.GetRightTriggerAxis()-cntrl.GetLeftTriggerAxis()));
   }
@@ -35,6 +46,8 @@ class Robot : public frc::TimedRobot {
   frc::MecanumDrive m_robotDrive{m_frontLeft, m_rearLeft, m_frontRight, m_rearRight};
 
   frc::XboxController cntrl{kControllerChannel};
+ 
+  frc::Timer timekeep;
 };
 
 #ifndef RUNNING_FRC_TESTS
