@@ -1,6 +1,3 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
 #define PI           3.14159265358979323846
 #include <frc/TimedRobot.h>
 #include <frc/XboxController.h>
@@ -13,7 +10,8 @@
 #include <rev/CANSparkMax.h>
 #include <frc/AnalogEncoder.h>
 #include <units/velocity.h>
-#include <frc/AnalogGyro.h>
+#include <frc/BuiltInAccelerometer.h>
+#include <frc/interfaces/Gyro.h>
 #include <frc/PneumaticsModuleType.h>
 #include <rev/SparkMaxPIDController.h>
 #include <frc/PneumaticHub.h>
@@ -52,11 +50,12 @@ class Robot : public frc::TimedRobot {
   frc::AnalogEncoder encbr {3};
   bool pneumaticson = false;
   int abuttoncount = 0;
+  double speedfactor = 3000;
   //frc::PneumaticHub pcontrol {15};
   frc::DoubleSolenoid grippercontrol {15, frc::PneumaticsModuleType::REVPH, 0, 1};
   rev::CANSparkMax armmtr {10, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
-
-
+  frc::BuiltInAccelerometer acc;
+  
 //rev::CANSparkMax testmtr{10, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
 //rev::SparkMaxPIDController pidController = testmtr.GetPIDController();
 
@@ -120,6 +119,7 @@ frc::SmartDashboard::PutNumber("backright", encbr.GetAbsolutePosition());
     pidbr.SetP(0.0001);
     pidbr.SetI(.000001);
     pidbr.SetD(0.00000001);
+    speedfactor = 3000;
   }
   void TeleopPeriodic() override {
     
@@ -132,6 +132,16 @@ frc::SmartDashboard::PutNumber("backright", encbr.GetAbsolutePosition());
       }
       frc::SmartDashboard::PutNumber("abuttoncheck", abuttoncount);
       abuttoncount += 1;
+    }
+
+    if (controller.GetRightBumperPressed()) {
+      if (speedfactor < 9000) {
+        speedfactor *= 2;
+      }
+    } else if (controller.GetRightBumperPressed()) {
+      if (speedfactor > 750) {
+        speedfactor /= 2;
+      }
     }
     
     double x = controller.GetLeftX();
@@ -152,6 +162,16 @@ frc::SmartDashboard::PutNumber("backright", encbr.GetAbsolutePosition());
    // frc::SmartDashboard::PutNumber("left", pcontrol.GetSolenoids());
     frc::SmartDashboard::PutNumber("right", armright);
     armmtr.Set((armright-armleft)/2);
+
+    if (sin(controller.GetPOV()*PI/180) > .85) {
+        y = .2;
+    } else if (sin(controller.GetPOV()*PI/180) < -.85) {
+        y = -.2;
+    } else if (cos(controller.GetPOV()*PI/180) > .85) {
+        x = .2;
+    } else if (cos(controller.GetPOV()*PI/180) < -.85) {
+        x = -.2;
+    }
 
     units::velocity::meters_per_second_t contrx {x};
     units::velocity::meters_per_second_t contry {y};
@@ -214,13 +234,13 @@ frc::SmartDashboard::PutNumber("backright", encbr.GetAbsolutePosition());
     rotbr.Set(brpos);
     
   
-    pidfl.SetReference(frole*3000, rev::ControlType::kVelocity);
+    pidfl.SetReference(frole*speedfactor, rev::ControlType::kVelocity);
   
-    pidfr.SetReference(frole*3000, rev::ControlType::kVelocity);
+    pidfr.SetReference(frole*speedfactor, rev::ControlType::kVelocity);
     
-    pidbl.SetReference(bale*3000, rev::ControlType::kVelocity);
+    pidbl.SetReference(bale*speedfactor, rev::ControlType::kVelocity);
    
-    pidbr.SetReference(bari*3000, rev::ControlType::kVelocity);
+    pidbr.SetReference(bari*speedfactor, rev::ControlType::kVelocity);
 
   }
 };
