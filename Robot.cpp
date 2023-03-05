@@ -1,4 +1,3 @@
-
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
@@ -15,8 +14,9 @@
 #include <frc/AnalogEncoder.h>
 #include <units/velocity.h>
 #include <frc/AnalogGyro.h>
+#include <frc/PneumaticsModuleType.h>
 #include <rev/SparkMaxPIDController.h>
-#include <frc/PneumaticsControlModule.h>
+#include <frc/PneumaticHub.h>
 #include <frc/DoubleSolenoid.h>
 #include <rev/ControlType.h>
 #include <frc/smartdashboard/SmartDashboard.h>
@@ -51,8 +51,9 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax rotbr{8, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
   frc::AnalogEncoder encbr {3};
   bool pneumaticson = false;
-  frc::PneumaticsControlModule pcontrol {15};
-  frc::DoubleSolenoid grippercontrol = pcontrol.MakeDoubleSolenoid(0, 1);
+  int abuttoncount = 0;
+  //frc::PneumaticHub pcontrol {15};
+  frc::DoubleSolenoid grippercontrol {15, frc::PneumaticsModuleType::REVPH, 0, 1};
   rev::CANSparkMax armmtr {10, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
 
 
@@ -119,13 +120,20 @@ frc::SmartDashboard::PutNumber("backright", encbr.GetAbsolutePosition());
     pidbr.SetP(0.0001);
     pidbr.SetI(.000001);
     pidbr.SetD(0.00000001);
-
-
   }
   void TeleopPeriodic() override {
+    
     if (controller.GetAButtonPressed()) {
-      grippercontrol.Toggle();
+      pneumaticson = !pneumaticson;
+      if (pneumaticson) {
+        grippercontrol.Set(frc::DoubleSolenoid::kReverse);
+      } else {
+        grippercontrol.Set(frc::DoubleSolenoid::kForward);
+      }
+      frc::SmartDashboard::PutNumber("abuttoncheck", abuttoncount);
+      abuttoncount += 1;
     }
+    
     double x = controller.GetLeftX();
     if (x < 0.1 && x > -.1) {
       x = 0;
@@ -141,7 +149,7 @@ frc::SmartDashboard::PutNumber("backright", encbr.GetAbsolutePosition());
 
     double armright = controller.GetRightTriggerAxis();
     double armleft = controller.GetLeftTriggerAxis();
-    frc::SmartDashboard::PutNumber("left", armleft);
+   // frc::SmartDashboard::PutNumber("left", pcontrol.GetSolenoids());
     frc::SmartDashboard::PutNumber("right", armright);
     armmtr.Set((armright-armleft)/2);
 
