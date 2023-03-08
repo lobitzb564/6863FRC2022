@@ -9,6 +9,8 @@
 #include <frc/kinematics/SwerveModuleState.h>
 #include <rev/CANSparkMax.h>
 #include <frc/AnalogEncoder.h>
+#include <cameraserver/CameraServer.h>
+#include<frc/Timer.h>
 #include <units/velocity.h>
 #include <frc/BuiltInAccelerometer.h>
 #include <frc/interfaces/Gyro.h>
@@ -29,6 +31,8 @@ class Robot : public frc::TimedRobot {
   frc::Translation2d m_frontRightLocation{.267_m, -0.365_m};
   frc::Translation2d m_backLeftLocation{-0.267_m, 0.365_m};
   frc::Translation2d m_backRightLocation{-0.267_m, -0.365_m};
+
+
   rev::CANSparkMax wheelfl{1, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
   rev::SparkMaxPIDController pidfl = wheelfl.GetPIDController();
   rev::CANSparkMax wheelfr{5, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
@@ -51,6 +55,7 @@ class Robot : public frc::TimedRobot {
   bool pneumaticson = false;
   int abuttoncount = 0;
   double speedfactor = 3000;
+  frc::Timer time;
   //frc::PneumaticHub pcontrol {15};
   frc::DoubleSolenoid grippercontrol {15, frc::PneumaticsModuleType::REVPH, 0, 1};
   rev::CANSparkMax armmtr {10, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
@@ -65,120 +70,24 @@ frc::SwerveDriveKinematics<4> kinematics{
   m_frontLeftLocation, m_frontRightLocation, m_backLeftLocation,
   m_backRightLocation};
   frc::XboxController controller{0};
+  frc::XboxController controller2{1};
  public:
   void RobotInit() override {
 
   wheelfl.SetInverted(true);
   wheelbr.SetInverted(true);
   wheelbl.SetInverted(true);
-    //pidController.SetP(.0001);
-    //pidController.SetI(.000001);
-    //pidController.SetD(0.00000001);
-    
-
-    //pidController.SetIZone(0);
-    //pidController.SetFF(0);
-    //pidController.SetOutputRange(-1, 1);
 
 // set proper motors inverted here
   }
   void AutonomousInit() override {
-    //pidController.SetReference(speed, rev::ControlType::kVelocity);
-    rotfl.Set(0);
-    rotfr.Set(0);
-    rotbl.Set(0);
-    rotbr.Set(0);
-    encfl.Reset();
-    encfr.Reset();
-    encbl.Reset();
-    encbr.Reset();
-    //testmtr.Set(.05);
+    time.Start();
   }
 
   void AutonomousPeriodic() override {
-      frc::SmartDashboard::PutNumber("frontleft", encfl.GetAbsolutePosition());
-frc::SmartDashboard::PutNumber("frontright", encfr.GetAbsolutePosition());
-frc::SmartDashboard::PutNumber("backleft", encbl.GetAbsolutePosition());
-frc::SmartDashboard::PutNumber("backright", encbr.GetAbsolutePosition());
-  }
-
-  void TeleopInit() override {
-    pneumaticson = false;
-    pidfl.SetP(0.0001);
-    pidfl.SetI(.000001);
-    pidfl.SetD(0.00000001);
-
-    pidfr.SetP(0.0001);
-    pidfr.SetI(.000001);
-    pidfr.SetD(0.00000001);
-
-    pidbl.SetP(0.0001);
-    pidbl.SetI(.000001);
-    pidbl.SetD(0.00000001);
-
-    pidbr.SetP(0.0001);
-    pidbr.SetI(.000001);
-    pidbr.SetD(0.00000001);
-    speedfactor = 3000;
-  }
-  void TeleopPeriodic() override {
-    
-    if (controller.GetAButtonPressed()) {
-      pneumaticson = !pneumaticson;
-      if (pneumaticson) {
-        grippercontrol.Set(frc::DoubleSolenoid::kReverse);
-      } else {
-        grippercontrol.Set(frc::DoubleSolenoid::kForward);
-      }
-      frc::SmartDashboard::PutNumber("abuttoncheck", abuttoncount);
-      abuttoncount += 1;
-    }
-
-    if (controller.GetRightBumperPressed()) {
-      if (speedfactor < 9000) {
-        speedfactor *= 2;
-      }
-    } else if (controller.GetRightBumperPressed()) {
-      if (speedfactor > 750) {
-        speedfactor /= 2;
-      }
-    }
-    
-    double x = controller.GetLeftX();
-    if (x < 0.1 && x > -.1) {
-      x = 0;
-    }
-    double y = controller.GetLeftY();
-    if (y < 0.1 && y > -0.1) {
-      y = 0;
-    }
-    double turn = controller.GetRightX();
-    if (turn < 0.1 && turn > -0.1) {
-      turn = 0;
-    }
-
-    double armright = controller.GetRightTriggerAxis();
-    double armleft = controller.GetLeftTriggerAxis();
-   // frc::SmartDashboard::PutNumber("left", pcontrol.GetSolenoids());
-    frc::SmartDashboard::PutNumber("right", armright);
-    armmtr.Set((armright-armleft)/2);
-
-    if (sin(controller.GetPOV()*PI/180) > .85) {
-        y = .2;
-    } else if (sin(controller.GetPOV()*PI/180) < -.85) {
-        y = -.2;
-    } else if (cos(controller.GetPOV()*PI/180) > .85) {
-        x = .2;
-    } else if (cos(controller.GetPOV()*PI/180) < -.85) {
-        x = -.2;
-    }
-
-    units::velocity::meters_per_second_t contrx {x};
-    units::velocity::meters_per_second_t contry {y};
-    units::radians_per_second_t rot {turn};
-
     frc::Rotation2d rot2d;
-    frc::ChassisSpeeds speeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(contry, contrx, rot*2, rot2d);
+    units::radians_per_second_t rad {0};
+    frc::ChassisSpeeds speeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(0_mps, .5_mps, rad, rot2d);
 
     auto [fl, fr, bl, br] = kinematics.ToSwerveModuleStates(speeds);
 
@@ -200,6 +109,47 @@ frc::SmartDashboard::PutNumber("backright", encbr.GetAbsolutePosition());
     // absolute encoders are analog and measure position in rotations
 
     
+     if (time.Get() <= 1.5_s) {
+        armmtr.Set(-.5);
+     } else if (time.Get() < 3_s){
+        armmtr.Set(-.3);
+     } else if (time.Get() < 4_s) {
+
+      // this is where the arm should open, if it doesn't change kForward to kReverse
+        grippercontrol.Set(frc::DoubleSolenoid::kForward);
+     } else if (time.Get() < 6_s) {
+        armmtr.Set(-.5);
+     } else if (time.Get() < 8_s) {
+        Drive(getfl, getfr, getbl, getbr, frole, frori, bale, bari);
+     }
+
+  }
+
+  void TeleopInit() override {
+    time.Stop();
+    time.Reset();
+    pneumaticson = false;
+    pidfl.SetP(0.0001);
+    pidfl.SetI(.000001);
+    pidfl.SetD(0.00000001);
+
+    pidfr.SetP(0.0001);
+    pidfr.SetI(.000001);
+    pidfr.SetD(0.00000001);
+
+    pidbl.SetP(0.0001);
+    pidbl.SetI(.000001);
+    pidbl.SetD(0.00000001);
+
+    pidbr.SetP(0.0001);
+    pidbr.SetI(.000001);
+    pidbr.SetD(0.00000001);
+    speedfactor = 3000;
+    frc::CameraServer::StartAutomaticCapture();
+
+  }
+
+  void Drive(double getfl, double getfr, double getbl, double getbr, double frole, double frori, double bale, double bari) {
     double flpos = encfl.GetAbsolutePosition()-getfl;
     
     if (flpos > 0.5) {
@@ -236,11 +186,92 @@ frc::SmartDashboard::PutNumber("backright", encbr.GetAbsolutePosition());
   
     pidfl.SetReference(frole*speedfactor, rev::ControlType::kVelocity);
   
-    pidfr.SetReference(frole*speedfactor, rev::ControlType::kVelocity);
+    pidfr.SetReference(frori*speedfactor, rev::ControlType::kVelocity);
     
     pidbl.SetReference(bale*speedfactor, rev::ControlType::kVelocity);
    
     pidbr.SetReference(bari*speedfactor, rev::ControlType::kVelocity);
+  }
+  void TeleopPeriodic() override {
+    
+    if (controller2.GetAButtonPressed()) {
+      pneumaticson = !pneumaticson;
+      if (pneumaticson) {
+        grippercontrol.Set(frc::DoubleSolenoid::kReverse);
+      } else {
+        grippercontrol.Set(frc::DoubleSolenoid::kForward);
+      }
+      frc::SmartDashboard::PutNumber("abuttoncheck", abuttoncount);
+      abuttoncount += 1;
+    }
+
+    if (controller.GetRightBumperPressed()) {
+      if (speedfactor < 6000) {
+        speedfactor *= 2;
+      }
+    } else if (controller.GetLeftBumperPressed()) {
+      if (speedfactor > 750) {
+        speedfactor /= 2;
+      }
+    }
+    
+    double x = controller.GetLeftX();
+    if (x < 0.1 && x > -.1) {
+      x = 0;
+    }
+    double y = controller.GetLeftY();
+    if (y < 0.1 && y > -0.1) {
+      y = 0;
+    }
+    double turn = controller.GetRightX();
+    if (turn < 0.1 && turn > -0.1) {
+      turn = 0;
+    }
+    double armright = controller2.GetRightTriggerAxis();
+    double armleft = controller2.GetLeftTriggerAxis();
+   // frc::SmartDashboard::PutNumber("left", pcontrol.GetSolenoids());
+    frc::SmartDashboard::PutNumber("right", controller.GetPOV());
+    armmtr.Set((armleft-armright)/2);
+    /*
+if (controller.GetPOVCount() != -1) {
+    if (sin(controller.GetPOVCount()*PI/180) > .85) {
+        y = .2;
+    } else if (sin(controller.GetPOVCount()*PI/180) < -.85) {
+        y = -.2;
+    } else if (cos(controller.GetPOVCount()*PI/180) > .85) {
+        x = .2;
+    } else if (cos(controller.GetPOVCount()*PI/180) < -.85) {
+        x = -.2;
+    }
+} */
+
+    units::velocity::meters_per_second_t contrx {x};
+    units::velocity::meters_per_second_t contry {y};
+    units::radians_per_second_t rot {turn};
+
+    frc::Rotation2d rot2d;
+    frc::ChassisSpeeds speeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(contry, contrx, rot*2, rot2d);
+
+    auto [fl, fr, bl, br] = kinematics.ToSwerveModuleStates(speeds);
+
+    // move swerve motors to angles here
+
+    double getfl = fl.angle.Radians().value()/2.0/PI;
+    double getfr = fr.angle.Radians().value()/2.0/PI;
+    double getbl = bl.angle.Radians().value()/2.0/PI;
+    double getbr = br.angle.Radians().value()/2.0/PI;
+
+
+
+
+    double frole = fl.speed.value();
+    double frori = fr.speed.value();
+    double bale = bl.speed.value();
+    double bari = br.speed.value();
+
+    // absolute encoders are analog and measure position in rotations
+
+    Drive(getfl, getfr, getbl, getbr, frole, frori, bale, bari);
 
   }
 };
