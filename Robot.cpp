@@ -13,7 +13,7 @@
 #include<frc/Timer.h>
 #include <units/velocity.h>
 #include <frc/BuiltInAccelerometer.h>
-#include <frc/interfaces/Gyro.h>
+#include <frc/AnalogGyro.h>
 #include <frc/PneumaticsModuleType.h>
 #include <rev/SparkMaxPIDController.h>
 #include <frc/PneumaticHub.h>
@@ -63,6 +63,9 @@ class Robot : public frc::TimedRobot {
   frc::DoubleSolenoid grippercontrol {15, frc::PneumaticsModuleType::REVPH, 0, 1};
   rev::CANSparkMax armmtr {10, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
   frc::BuiltInAccelerometer acc;
+  
+  // this is the port number I am unsure about, look at docs for how this connection works
+  frc::AnalogGyro gy {0};
   
 //rev::CANSparkMax testmtr{10, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
 //rev::SparkMaxPIDController pidController = testmtr.GetPIDController();
@@ -149,9 +152,11 @@ frc::SwerveDriveKinematics<4> kinematics{
 
   void Drive(double x, double y, double rotate) {
     frc::Rotation2d rot2d;
+    frc::Rotation2d gy2d = gy.GetRotation2d();
     units::radians_per_second_t rad {rotate};
     units::meters_per_second_t speedy {y};
     units::meters_per_second_t speedx {x};
+    // change this from rot2d to gy2d for field oriented control
     frc::ChassisSpeeds speeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(speedy, speedx, rad, rot2d);
 
     auto [fl, fr, bl, br] = kinematics.ToSwerveModuleStates(speeds);
@@ -294,6 +299,7 @@ frc::SwerveDriveKinematics<4> kinematics{
 
   void AutoDrive(double x, double y, double rotate) {
     frc::Rotation2d rot2d;
+     frc::Rotation2d gy2d = gy.GetRotation2d();
     units::radians_per_second_t rad {rotate};
     units::meters_per_second_t speedy {y};
     units::meters_per_second_t speedx {x};
